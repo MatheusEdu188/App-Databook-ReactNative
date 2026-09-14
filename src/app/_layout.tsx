@@ -18,6 +18,11 @@
           options={{
             title: 'Favoritos',
           }}/>
+          <Tabs.Screen
+          name="personagens"
+          options={{
+            href: '/personagens',
+          }}/>
       </Tabs> 
     );
   }

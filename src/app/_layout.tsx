@@ -4,7 +4,7 @@
     return (
       <Tabs
         screenOptions={{
-          headerShown: true,
+          headerShown: false,
         }}
       >
         <Tabs.Screen
@@ -22,6 +22,11 @@
           name="personagens"
           options={{
             href: '/personagens',
+          }}/>
+          <Tabs.Screen
+          name="CreateFilme"
+          options={{
+            href: '/CreateFilme',
           }}/>
       </Tabs> 
     );

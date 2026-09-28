@@ -18,7 +18,7 @@ export default function CreateFilme() {
 
     async function cadastrarFilme() {
 
-        const novoFilme: Filme = {
+        const novoFilme: Filme = {  
             id: Date.now(),
             name: nome,
             ano: ano,

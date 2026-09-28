@@ -31,7 +31,6 @@ export default function Personagens() {
     useState<Personagem | null>(null);
 
 
-  // CARREGAR PERSONAGENS DO ASYNCSTORAGE
 
   async function carregarPersonagens() {
 
@@ -49,7 +48,7 @@ export default function Personagens() {
   }, []);
 
 
-  // EDITAR PERSONAGEM
+  
 
   function editarPersonagem(personagem: Personagem) {
 
@@ -63,7 +62,6 @@ export default function Personagens() {
   }
 
 
-  // ATUALIZAR PERSONAGEM
 
   async function atualizarPersonagem() {
 
@@ -102,7 +100,6 @@ export default function Personagens() {
   }
 
 
-  // EXCLUIR PERSONAGEM
 
   async function excluirPersonagem(id: number) {
 
@@ -121,7 +118,6 @@ export default function Personagens() {
   }
 
 
-  // LIMPAR FORMULÁRIO
 
   function limparFormulario() {
 
@@ -195,7 +191,6 @@ export default function Personagens() {
       />
 
 
-      {/* MODAL APENAS PARA EDIÇÃO */}
 
       <Modal
         visible={modalVisible}

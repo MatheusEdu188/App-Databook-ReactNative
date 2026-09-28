@@ -1,12 +1,13 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import {
     Button,
+    FlatList,
     Modal,
+    StyleSheet,
     Text,
     TextInput,
     View,
-    FlatList,
-    StyleSheet,
 } from "react-native";
 
 type Filme = {
@@ -26,10 +27,30 @@ export default function Filmes() {
     const [ano, setAno] = useState("");
     const [genero, setGenero] = useState("");
 
-    const [filmeEditando, setFilmeEditando] = useState<Filme | null>(null);
+    const [filmeEditando, setFilmeEditando] =
+        useState<Filme | null>(null);
+
+
+
+    async function carregarFilmes() {
+
+        const dadosSalvos =
+            await AsyncStorage.getItem("filmes");
+
+        if (dadosSalvos) {
+            setFilmes(JSON.parse(dadosSalvos));
+        }
+    }
+
+
+    useEffect(() => {
+        carregarFilmes();
+    }, []);
+
 
 
     function editarFilme(filme: Filme) {
+
         setFilmeEditando(filme);
 
         setNome(filme.name);
@@ -40,32 +61,38 @@ export default function Filmes() {
     }
 
 
-    function excluirFilme(id: number) {
-        setFilmes((filmesAnteriores) =>
-            filmesAnteriores.filter((filme) => filme.id !== id)
-        );
-    }
 
+    async function atualizarFilme() {
 
-    function atualizarFilme() {
         if (filmeEditando === null) {
             return;
         }
 
-        setFilmes((filmesAnteriores) =>
-            filmesAnteriores.map((filme) => {
-                if (filme.id === filmeEditando.id) {
-                    return {
-                        ...filme,
-                        name: nome,
-                        ano: ano,
-                        genero: genero,
-                    };
-                }
 
-                return filme;
-            })
+        const novaLista = filmes.map((filme) => {
+
+            if (filme.id === filmeEditando.id) {
+
+                return {
+                    ...filme,
+                    name: nome,
+                    ano: ano,
+                    genero: genero,
+                };
+            }
+
+            return filme;
+        });
+
+
+        setFilmes(novaLista);
+
+
+        await AsyncStorage.setItem(
+            "filmes",
+            JSON.stringify(novaLista)
         );
+
 
         setFilmeEditando(null);
 
@@ -76,18 +103,29 @@ export default function Filmes() {
         setModalVisible(false);
     }
 
-    function cadastrarFilme() {
-        const novoFilme: Filme = {
-            id: Date.now(),
-            name: nome,
-            ano: ano,
-            genero: genero,
-        };
 
-        setFilmes((filmesAnteriores) => [
-            ...filmesAnteriores,
-            novoFilme,
-        ]);
+
+    async function excluirFilme(id: number) {
+
+        const novaLista = filmes.filter(
+            (filme) => filme.id !== id
+        );
+
+
+        setFilmes(novaLista);
+
+
+        await AsyncStorage.setItem(
+            "filmes",
+            JSON.stringify(novaLista)
+        );
+    }
+
+
+
+    function limparFormulario() {
+
+        setFilmeEditando(null);
 
         setNome("");
         setAno("");
@@ -96,23 +134,26 @@ export default function Filmes() {
         setModalVisible(false);
     }
 
-    
 
     return (
         <View style={styles.container}>
 
-            <Text style={styles.title}>Filmes</Text>
+            <Text style={styles.title}>
+                Filmes
+            </Text>
 
-            <Button
-                title="Cadastrar Filme"
-                onPress={() => setModalVisible(true)}
-            />
 
             <FlatList
                 data={filmes}
-                keyExtractor={(item) => item.id.toString()}
+
+                keyExtractor={(item) =>
+                    item.id.toString()
+                }
+
                 renderItem={({ item }) => (
+
                     <View style={styles.card}>
+
                         <Text style={styles.nome}>
                             {item.name}
                         </Text>
@@ -125,25 +166,46 @@ export default function Filmes() {
                             Gênero: {item.genero}
                         </Text>
 
-                        <Button title="Editar" onPress={() => editarFilme(item)}/>
-                        <Button title="Excluir" onPress={() => excluirFilme(item.id)}/>
+
+                        <View style={styles.botoes}>
+
+                            <Button
+                                title="Editar"
+                                onPress={() =>
+                                    editarFilme(item)
+                                }
+                            />
+
+                            <Button
+                                title="Excluir"
+                                onPress={() =>
+                                    excluirFilme(item.id)
+                                }
+                            />
+
+                        </View>
+
                     </View>
                 )}
             />
+
+
 
             <Modal
                 visible={modalVisible}
                 animationType="slide"
                 transparent={true}
-                onRequestClose={() => setModalVisible(false)}
+                onRequestClose={limparFormulario}
             >
+
                 <View style={styles.modalContainer}>
 
                     <View style={styles.modal}>
 
                         <Text style={styles.modalTitle}>
-                            Cadastrar filme
+                            Editar filme
                         </Text>
+
 
                         <TextInput
                             placeholder="Nome"
@@ -151,6 +213,7 @@ export default function Filmes() {
                             value={nome}
                             onChangeText={setNome}
                         />
+
 
                         <TextInput
                             placeholder="Ano"
@@ -160,6 +223,7 @@ export default function Filmes() {
                             keyboardType="numeric"
                         />
 
+
                         <TextInput
                             placeholder="Gênero"
                             style={styles.input}
@@ -167,35 +231,43 @@ export default function Filmes() {
                             onChangeText={setGenero}
                         />
 
+
                         <Button
-                            title={filmeEditando ? "Salvar alterações" : "Cadastrar"}
-                            onPress={filmeEditando ? atualizarFilme : cadastrarFilme}
+                            title="Salvar alterações"
+                            onPress={atualizarFilme}
                         />
+
 
                         <Button
                             title="Cancelar"
-                            onPress={() => setModalVisible(false)}
+                            onPress={limparFormulario}
                         />
 
                     </View>
+
                 </View>
+
             </Modal>
 
         </View>
     );
 }
 
+
 const styles = StyleSheet.create({
+
     container: {
         flex: 1,
         padding: 20,
     },
+
 
     title: {
         fontSize: 24,
         fontWeight: "bold",
         marginBottom: 20,
     },
+
 
     card: {
         padding: 15,
@@ -204,10 +276,20 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
 
+
     nome: {
         fontSize: 18,
         fontWeight: "bold",
+        marginBottom: 5,
     },
+
+
+    botoes: {
+        flexDirection: "row",
+        gap: 10,
+        marginTop: 10,
+    },
+
 
     modalContainer: {
         flex: 1,
@@ -216,6 +298,7 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(0,0,0,0.5)",
     },
 
+
     modal: {
         width: "85%",
         padding: 20,
@@ -223,11 +306,13 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
 
+
     modalTitle: {
         fontSize: 20,
         fontWeight: "bold",
         marginBottom: 20,
     },
+
 
     input: {
         borderWidth: 1,
@@ -236,5 +321,5 @@ const styles = StyleSheet.create({
         padding: 10,
         marginBottom: 15,
     },
-});
 
+});

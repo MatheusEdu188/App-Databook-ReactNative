@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button, TextInput, View, Text, StyleSheet } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 
@@ -15,6 +16,30 @@ type Filme = {
 export default function CreateFilme() {
 
 
+    async function cadastrarFilme() {
+
+        const novoFilme: Filme = {
+            id: Date.now(),
+            name: nome,
+            ano: ano,
+            genero: genero,
+        };
+
+        const dadosSalvos = await AsyncStorage.getItem("filmes");
+
+        const filmes: Filme[] = dadosSalvos
+            ? JSON.parse(dadosSalvos)
+            : [];
+
+        filmes.push(novoFilme);
+
+        await AsyncStorage.setItem(
+            "filmes",
+            JSON.stringify(filmes)
+        );
+    }
+
+
 
     const [nome, setNome] = useState("");
     const [ano, setAno] = useState("");
@@ -22,9 +47,9 @@ export default function CreateFilme() {
     return (
         <View style={styles.Create}>
 
-                <Text style={styles.bodyTitle}>
-                    Cadastrar filme
-                </Text>
+            <Text style={styles.bodyTitle}>
+                Cadastrar filme
+            </Text>
             <View style={styles.bodyCreate}>
 
 
@@ -59,10 +84,11 @@ export default function CreateFilme() {
                 </View>
                 <Button
                     title="Cadastrar"
-                /> 
-               
+                    onPress={cadastrarFilme}
+                />
 
-                
+
+
 
 
 
@@ -75,7 +101,7 @@ export default function CreateFilme() {
 const styles = StyleSheet.create({
     Create: {
         display: "flex",
-        
+
         backgroundColor: "#eeeeee",
         height: "100%",
     },

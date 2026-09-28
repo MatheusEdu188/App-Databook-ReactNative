@@ -1,4 +1,5 @@
-import { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -30,26 +31,26 @@ export default function Personagens() {
     useState<Personagem | null>(null);
 
 
-  
-  function cadastrarPersonagem() {
+  // CARREGAR PERSONAGENS DO ASYNCSTORAGE
 
-    const novoPersonagem: Personagem = {
-      id: Date.now(),
-      name: nome,
-      idade: idade,
-      especie: especie,
-    };
+  async function carregarPersonagens() {
 
-    setPersonagens((personagensAnteriores) => [
-      ...personagensAnteriores,
-      novoPersonagem,
-    ]);
+    const dadosSalvos =
+      await AsyncStorage.getItem("personagens");
 
-    limparFormulario();
+    if (dadosSalvos) {
+      setPersonagens(JSON.parse(dadosSalvos));
+    }
   }
 
 
-  
+  useEffect(() => {
+    carregarPersonagens();
+  }, []);
+
+
+  // EDITAR PERSONAGEM
+
   function editarPersonagem(personagem: Personagem) {
 
     setPersonagemEditando(personagem);
@@ -62,47 +63,66 @@ export default function Personagens() {
   }
 
 
-  function atualizarPersonagem() {
+  // ATUALIZAR PERSONAGEM
+
+  async function atualizarPersonagem() {
 
     if (personagemEditando === null) {
       return;
     }
 
-    setPersonagens((personagensAnteriores) =>
-      personagensAnteriores.map((personagem) => {
 
-        if (personagem.id === personagemEditando.id) {
+    const novaLista = personagens.map((personagem) => {
 
-          return {
-            ...personagem,
-            name: nome,
-            idade: idade,
-            especie: especie,
-          };
+      if (personagem.id === personagemEditando.id) {
 
-        }
+        return {
+          ...personagem,
+          name: nome,
+          idade: idade,
+          especie: especie,
+        };
 
-        return personagem;
+      }
 
-      })
+      return personagem;
+    });
+
+
+    setPersonagens(novaLista);
+
+
+    await AsyncStorage.setItem(
+      "personagens",
+      JSON.stringify(novaLista)
     );
+
 
     limparFormulario();
   }
 
 
-  
-  function excluirPersonagem(id: number) {
+  // EXCLUIR PERSONAGEM
 
-    setPersonagens((personagensAnteriores) =>
-      personagensAnteriores.filter(
-        (personagem) => personagem.id !== id
-      )
+  async function excluirPersonagem(id: number) {
+
+    const novaLista = personagens.filter(
+      (personagem) => personagem.id !== id
+    );
+
+
+    setPersonagens(novaLista);
+
+
+    await AsyncStorage.setItem(
+      "personagens",
+      JSON.stringify(novaLista)
     );
   }
 
 
-  
+  // LIMPAR FORMULÁRIO
+
   function limparFormulario() {
 
     setNome("");
@@ -121,12 +141,6 @@ export default function Personagens() {
       <Text style={styles.titulo}>
         Personagens
       </Text>
-
-
-      <Button
-        title="Cadastrar personagem"
-        onPress={() => setModalVisible(true)}
-      />
 
 
       <FlatList
@@ -181,6 +195,8 @@ export default function Personagens() {
       />
 
 
+      {/* MODAL APENAS PARA EDIÇÃO */}
+
       <Modal
         visible={modalVisible}
         animationType="slide"
@@ -192,9 +208,7 @@ export default function Personagens() {
           <View style={styles.modal}>
 
             <Text style={styles.modalTitle}>
-              {personagemEditando
-                ? "Editar personagem"
-                : "Cadastrar personagem"}
+              Editar personagem
             </Text>
 
 
@@ -224,17 +238,8 @@ export default function Personagens() {
 
 
             <Button
-              title={
-                personagemEditando
-                  ? "Salvar alterações"
-                  : "Cadastrar"
-              }
-
-              onPress={
-                personagemEditando
-                  ? atualizarPersonagem
-                  : cadastrarPersonagem
-              }
+              title="Salvar alterações"
+              onPress={atualizarPersonagem}
             />
 
 
